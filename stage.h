@@ -12,4 +12,6 @@ struct stage {
     char *argv[];
 };
 
+void print_stage(struct stage *st);
+
 #endif
