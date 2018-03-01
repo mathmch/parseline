@@ -2,7 +2,7 @@
 #define stage_h
 
 #define INPUT_MAX 18  /* strlen("pipe from stage 8") + 1 */
-#define OUTPUT_MAX 16 /* strlen("pipe to stage 2") + 1 */
+#define OUTPUT_MAX 16 /* strlen("pipe to stage 8") + 1 */
 
 struct stage {
     int number;
