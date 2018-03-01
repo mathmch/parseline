@@ -3,7 +3,7 @@
 #include <string.h>
 #include <strings.h>
 #include "stage.h"
-/*#include "util.c"*/
+#include "util.c"
 
 #define MAX_COMMAND_LENGTH 512
 #define MAX_ARGUMENTS 10
@@ -26,7 +26,10 @@ int main(int argc, char *argv[]){
 
 void parse_line(char command[]){
     char *token;
+    int pipes;
     get_line(command);
+    pipes = count_occurrences(command, '|');
+    printf("%d", pipes);
     token = strtok(command, " ");
     do {
 	
