@@ -12,12 +12,16 @@ void print_stage(int stage, char *input, char *output, int argc, char *argv[]);
 
 int main(int argc, char *argv[]){
     char command[MAX_COMMAND_LENGTH*2];
+    char *test[2];
+    test[0] = "ls";
+    test[1] = "other";
     if (argc != 1){
 	fprintf(stderr, "usage: parseline\n");
 	exit(EXIT_FAILURE);
     }
     printf("line: ");
     parse_line(command);
+    print_stage(0, "original", "orig", 2, test);
     return 0;
 }
 
@@ -37,6 +41,7 @@ void get_line(char command[]){
 	fprintf(stderr, "command too long\n");
 	exit(EXIT_FAILURE);
     }
+    printf("\n");
 }
 
 void print_stage(int stage, char *input, char *output, int argc, char *argv[]){
@@ -49,8 +54,10 @@ void print_stage(int stage, char *input, char *output, int argc, char *argv[]){
     printf("      argc: %d\n", argc);
     printf("      argv: ");
     for (i = 0; i < argc; i++) {
-	printf("%s ", argv[i]);
+	printf("\"%s\"", argv[i]);
+	if (argc != 1 && i < argc - 1)
+	    printf(",");
     }
-    printf("\n");
+    printf("\n\n");
 
 }
