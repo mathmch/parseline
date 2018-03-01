@@ -3,6 +3,7 @@
 #include <string.h>
 #include <strings.h>
 #include "stage.h"
+/*#include "util.c"*/
 
 #define MAX_COMMAND_LENGTH 512
 #define MAX_ARGUMENTS 10
@@ -13,9 +14,6 @@ void get_line(char command[]);
 
 int main(int argc, char *argv[]){
     char command[MAX_COMMAND_LENGTH*2];
-    char *test[2];
-    test[0] = "ls";
-    test[1] = "other";
     if (argc != 1){
         fprintf(stderr, "usage: parseline\n");
         exit(EXIT_FAILURE);
@@ -27,11 +25,12 @@ int main(int argc, char *argv[]){
 
 
 void parse_line(char command[]){
-    char token;
+    char *token;
     get_line(command);
     token = strtok(command, " ");
-    printf("%s", token);
-
+    do {
+	
+    } while ((token = strtok(NULL, " ")) != NULL);
 }
 
 
