@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include "stage.h"
 
 #define MAX_COMMAND_LENGTH 512
 #define MAX_ARGUMENTS 10
@@ -27,7 +29,11 @@ int main(int argc, char *argv[]){
 
 
 void parse_line(char command[]){
+    char token;
     get_line(command);
+    token = strtok(command, " ");
+    printf("%s", token);
+    
     
 }
 
