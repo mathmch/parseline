@@ -10,8 +10,8 @@
 typedef enum { none, expecting, received } redirect_status;
 
 void parse_line(char command[]);
-void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages);
 void get_line(char command[]);
+void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages);
 void handle_invalid_redirection(int argc, char *argv[], bool is_input);
 
 int main(int argc, char *argv[]){
@@ -24,7 +24,6 @@ int main(int argc, char *argv[]){
     parse_line(command);
     return 0;
 }
-
 
 void parse_line(char command[]) {
     struct stage stages[MAX_PIPES + 1];
@@ -44,6 +43,18 @@ void parse_line(char command[]) {
         print_stage(&stages[i]);
 }
 
+void get_line(char command[]){
+    if (fgets(command, MAX_COMMAND_LENGTH*2, stdin) == NULL) {
+        perror("Read Command");
+        exit(EXIT_FAILURE);
+    }
+    if (strlen(command) > MAX_COMMAND_LENGTH) {
+        fprintf(stderr, "command too long\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("\n");
+}
+
 void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages) {
     char input[INPUT_MAX];
     char output[OUTPUT_MAX];
@@ -60,19 +71,19 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
     for (token = strtok(command, delim); token != NULL; token = strtok(NULL, delim)) {
         if (strcmp(token, "<") == 0) {
             /* input redirection */
-            if (current_stage != 0 || input_status != none || output_status != none)
+            if (current_stage != 0 || input_status || output_status)
                 handle_invalid_redirection(argc, argv, input_status != none);
             input_status = expecting;
         } else if (strcmp(token, ">") == 0) {
             /* output redirection */
-            if (current_stage != total_stages - 1 || input_status != none || output_status != none)
+            if (current_stage != total_stages - 1 || input_status || output_status)
                 handle_invalid_redirection(argc, argv, input_status != none);
             output_status = expecting;
-        } else if (input_status) {
+        } else if (input_status == expecting) {
             /* record input redirection source */
             strcpy(input, token);
             input_status = received;
-        } else if (output_status) {
+        } else if (output_status == expecting) {
             /* record output redirection source */
             strcpy(output, token);
             output_status = received;
@@ -89,18 +100,6 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
         handle_invalid_redirection(argc, argv, false);
 
     setup_stage(stage, current_stage, input, output, argc, argv, total_stages);
-}
-
-void get_line(char command[]){
-    if (fgets(command, MAX_COMMAND_LENGTH*2, stdin) == NULL) {
-        perror("Read Command");
-        exit(EXIT_FAILURE);
-    }
-    if (strlen(command) > MAX_COMMAND_LENGTH) {
-        fprintf(stderr, "command too long\n");
-        exit(EXIT_FAILURE);
-    }
-    printf("\n");
 }
 
 void handle_invalid_redirection(int argc, char *argv[], bool is_input) {
