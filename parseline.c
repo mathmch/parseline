@@ -10,6 +10,7 @@
 void parse_line(char command[]);
 void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages);
 void get_line(char command[]);
+void handle_invalid_redirection(int argc, char *argv[], bool is_input);
 
 int main(int argc, char *argv[]){
     char command[MAX_COMMAND_LENGTH*2];
@@ -46,45 +47,44 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
     char output[OUTPUT_MAX];
     int argc = 0;
     char *argv[MAX_ARGUMENTS];
+    bool expecting_input = false;
+    bool expecting_output = false;
     char *token;
-    int token_number = 0;
+    const char *delim = " \n";
 
     input[0] = '\0';
     output[0] = '\0';
 
-    token = strtok(command, " ");
-    while (token != NULL) {
+    for (token = strtok(command, delim); token != NULL; token = strtok(NULL, delim)) {
         if (strcmp(token, "<") == 0) {
             /* input redirection */
-            if (current_stage != 0 || token_number == 0) {
-                /* bail */
-            }
-            if ((token = strtok(NULL, " ")) == NULL) {
-                /* bail */
-            }
-            token_number++;
-            strcpy(input, token);
+            if (current_stage != 0 || expecting_input || expecting_output)
+                handle_invalid_redirection(argc, argv, expecting_input);
+            expecting_input = true;
         } else if (strcmp(token, ">") == 0) {
             /* output redirection */
-            if (current_stage != total_stages - 1 || token_number == 0) {
-                /* bail */
-            }
-            if ((token = strtok(NULL, " ")) == NULL) {
-                /* bail */
-            }
-            token_number++;
+            if (current_stage != total_stages - 1 || expecting_input || expecting_output)
+                handle_invalid_redirection(argc, argv, expecting_input);
+            expecting_output = true;
+        } else if (expecting_input) {
+            /* record input redirection source */
+            strcpy(input, token);
+            expecting_input = false;
+        } else if (expecting_output) {
+            /* record output redirection source */
             strcpy(output, token);
-        } else if (strcmp(token, "|") == 0) {
-            /* bail */
+            expecting_output = false;
         } else {
             /* command name or argument */
             argv[argc] = token;
             argc++;
         }
-
-        token = strtok(NULL, " ");
-        token_number++;
     }
+
+    if (expecting_input)
+        handle_invalid_redirection(argc, argv, true);
+    else if (expecting_output)
+        handle_invalid_redirection(argc, argv, false);
 
     setup_stage(stage, current_stage, input, output, argc, argv, total_stages);
 }
@@ -99,4 +99,11 @@ void get_line(char command[]){
         exit(EXIT_FAILURE);
     }
     printf("\n");
+}
+
+void handle_invalid_redirection(int argc, char *argv[], bool is_input) {
+    char *source = (argc != 0) ? argv[0] : is_input ? "<" : ">";
+    char *redirect_type = is_input ? "input" : "output";
+    fprintf(stderr, "%s: bad %s redirection\n", source, redirect_type);
+    exit(EXIT_FAILURE);
 }
