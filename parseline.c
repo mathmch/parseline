@@ -7,6 +7,8 @@
 
 #define MAX_COMMAND_LENGTH 512
 
+typedef enum { none, expecting, received } redirect_status;
+
 void parse_line(char command[]);
 void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages);
 void get_line(char command[]);
@@ -47,8 +49,8 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
     char output[OUTPUT_MAX];
     int argc = 0;
     char *argv[MAX_ARGUMENTS];
-    bool expecting_input = false;
-    bool expecting_output = false;
+    redirect_status input_status = none;
+    redirect_status output_status = none;
     char *token;
     const char *delim = " \n";
 
@@ -58,22 +60,22 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
     for (token = strtok(command, delim); token != NULL; token = strtok(NULL, delim)) {
         if (strcmp(token, "<") == 0) {
             /* input redirection */
-            if (current_stage != 0 || expecting_input || expecting_output)
-                handle_invalid_redirection(argc, argv, expecting_input);
-            expecting_input = true;
+            if (current_stage != 0 || input_status != none || output_status != none)
+                handle_invalid_redirection(argc, argv, input_status != none);
+            input_status = expecting;
         } else if (strcmp(token, ">") == 0) {
             /* output redirection */
-            if (current_stage != total_stages - 1 || expecting_input || expecting_output)
-                handle_invalid_redirection(argc, argv, expecting_input);
-            expecting_output = true;
-        } else if (expecting_input) {
+            if (current_stage != total_stages - 1 || input_status != none || output_status != none)
+                handle_invalid_redirection(argc, argv, input_status != none);
+            output_status = expecting;
+        } else if (input_status) {
             /* record input redirection source */
             strcpy(input, token);
-            expecting_input = false;
-        } else if (expecting_output) {
+            input_status = received;
+        } else if (output_status) {
             /* record output redirection source */
             strcpy(output, token);
-            expecting_output = false;
+            output_status = received;
         } else {
             /* command name or argument */
             argv[argc] = token;
@@ -81,9 +83,9 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
         }
     }
 
-    if (expecting_input)
+    if (input_status == expecting)
         handle_invalid_redirection(argc, argv, true);
-    else if (expecting_output)
+    else if (output_status == expecting)
         handle_invalid_redirection(argc, argv, false);
 
     setup_stage(stage, current_stage, input, output, argc, argv, total_stages);
