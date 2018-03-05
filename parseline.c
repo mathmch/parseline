@@ -12,7 +12,7 @@ typedef enum { none, expecting, received } redirect_status;
 void parse_line(char command[]);
 void get_line(char command[]);
 void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages);
-void handle_invalid_redirection(int argc, char *argv[], bool is_input);
+void handle_invalid_redirection(int argc, char *argv[], int is_input);
 
 int main(int argc, char *argv[]){
     char command[MAX_COMMAND_LENGTH*2];
@@ -30,20 +30,34 @@ void parse_line(char command[]) {
     char *token;
     int total_stages;
     int i;
+    char *end;
 
     get_line(command);
     total_stages = count_occurrences(command, '|') + 1;
-    token = strtok(command, "|");
-    for (i = 0; i < total_stages; i++) {
-        parse_stage(token, &stages[i], i, total_stages);
-        token = strtok(NULL, "|");
+
+    if (total_stages > MAX_PIPES + 1) {
+        fprintf(stderr, "pipeline too deep\n");
+        exit(EXIT_FAILURE);
     }
+
+    token = command;
+    for (i = 0; i < total_stages; i++) {
+        end = strpbrk(token, "|\n\0");
+        *end = '\0';
+        if (strcmp(token, " ") == 0 || *token == '\0') {
+            fprintf(stderr, "invalid null command\n");
+            exit(EXIT_FAILURE);
+        }
+        parse_stage(token, &stages[i], i, total_stages);
+        token = end + 1;
+    }
+    putchar('\n');
 
     for (i = 0; i < total_stages; i++)
         print_stage(&stages[i]);
 }
 
-void get_line(char command[]){
+void get_line(char command[]) {
     if (fgets(command, MAX_COMMAND_LENGTH*2, stdin) == NULL) {
         perror("Read Command");
         exit(EXIT_FAILURE);
@@ -52,7 +66,6 @@ void get_line(char command[]){
         fprintf(stderr, "command too long\n");
         exit(EXIT_FAILURE);
     }
-    printf("\n");
 }
 
 void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages) {
@@ -71,13 +84,13 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
     for (token = strtok(command, delim); token != NULL; token = strtok(NULL, delim)) {
         if (strcmp(token, "<") == 0) {
             /* input redirection */
-            if (current_stage != 0 || input_status || output_status)
-                handle_invalid_redirection(argc, argv, input_status != none);
+            if (input_status || output_status)
+                handle_invalid_redirection(argc, argv, input_status);
             input_status = expecting;
         } else if (strcmp(token, ">") == 0) {
             /* output redirection */
-            if (current_stage != total_stages - 1 || input_status || output_status)
-                handle_invalid_redirection(argc, argv, input_status != none);
+            if (input_status || output_status)
+                handle_invalid_redirection(argc, argv, input_status);
             output_status = expecting;
         } else if (input_status == expecting) {
             /* record input redirection source */
@@ -91,18 +104,31 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
             /* command name or argument */
             argv[argc] = token;
             argc++;
+
+            if (argc > MAX_ARGUMENTS) {
+                fprintf(stderr, "%s: too many arguments", argv[0]);
+                exit(EXIT_FAILURE);
+            }
         }
     }
 
     if (input_status == expecting)
-        handle_invalid_redirection(argc, argv, true);
+        handle_invalid_redirection(argc, argv, 1);
     else if (output_status == expecting)
-        handle_invalid_redirection(argc, argv, false);
+        handle_invalid_redirection(argc, argv, 0);
+
+    if (*input != '\0' && current_stage != 0) {
+        fprintf(stderr, "%s: ambiguous input\n", argv[0]);
+        exit(EXIT_FAILURE);
+    } else if (*output != '\0' && current_stage != total_stages - 1) {
+        fprintf(stderr, "%s: ambiguous output\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
     setup_stage(stage, current_stage, input, output, argc, argv, total_stages);
 }
 
-void handle_invalid_redirection(int argc, char *argv[], bool is_input) {
+void handle_invalid_redirection(int argc, char *argv[], int is_input) {
     char *source = (argc != 0) ? argv[0] : is_input ? "<" : ">";
     char *redirect_type = is_input ? "input" : "output";
     fprintf(stderr, "%s: bad %s redirection\n", source, redirect_type);
