@@ -5,8 +5,6 @@
 #include "stage.h"
 #include "util.h"
 
-#define MAX_COMMAND_LENGTH 512
-
 typedef enum { none, expecting, received } redirect_status;
 
 void parse_line(char command[]);
@@ -71,6 +69,7 @@ void get_line(char command[]) {
 
 void parse_stage(char *command, struct stage *stage,
                  int current_stage, int total_stages) {
+    char command_copy[MAX_COMMAND_LENGTH];
     char input[INPUT_MAX];
     char output[OUTPUT_MAX];
     int argc = 0;
@@ -80,6 +79,7 @@ void parse_stage(char *command, struct stage *stage,
     char *token;
     const char *delim = " \n";
 
+    strcpy(command_copy, command);
     input[0] = '\0';
     output[0] = '\0';
 
@@ -129,7 +129,8 @@ void parse_stage(char *command, struct stage *stage,
         exit(EXIT_FAILURE);
     }
 
-    setup_stage(stage, current_stage, input, output, argc, argv, total_stages);
+    setup_stage(stage, command_copy, current_stage, input,
+                output, argc, argv, total_stages);
 }
 
 void handle_invalid_redirection(int argc, char *argv[], int is_input) {

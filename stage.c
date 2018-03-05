@@ -2,8 +2,8 @@
 #include <string.h>
 #include "stage.h"
 
-void setup_stage(struct stage *stage, int number, char *input, char *output,
-                 int argc, char *argv[], int total_stages) {
+void setup_stage(struct stage *stage, char *command, int number, char *input,
+                 char *output, int argc, char *argv[], int total_stages) {
     int i;
 
     stage->number = number;
@@ -37,7 +37,7 @@ void setup_stage(struct stage *stage, int number, char *input, char *output,
 void print_stage(struct stage *st) {
     int i;
     printf("--------\n");
-    printf("Stage %d\n", st->number);
+    printf("Stage %d: %s\n", st->number, st->command);
     printf("--------\n");
     printf("     input: %s\n", st->input);
     printf("    output: %s\n", st->output);
