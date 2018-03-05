@@ -88,12 +88,12 @@ void parse_stage(char *command, struct stage *stage,
          token = strtok(NULL, delim)) {
         if (strcmp(token, "<") == 0) {
             /* input redirection */
-            if (input_status || output_status)
+            if (input_status != none || output_status == expecting)
                 handle_invalid_redirection(argc, argv, input_status);
             input_status = expecting;
         } else if (strcmp(token, ">") == 0) {
             /* output redirection */
-            if (input_status || output_status)
+            if (input_status == expecting || output_status != none)
                 handle_invalid_redirection(argc, argv, input_status);
             output_status = expecting;
         } else if (input_status == expecting) {
