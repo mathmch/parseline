@@ -11,7 +11,8 @@ typedef enum { none, expecting, received } redirect_status;
 
 void parse_line(char command[]);
 void get_line(char command[]);
-void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages);
+void parse_stage(char *command, struct stage *stage,
+                 int current_stage, int total_stages);
 void handle_invalid_redirection(int argc, char *argv[], int is_input);
 
 int main(int argc, char *argv[]){
@@ -68,7 +69,8 @@ void get_line(char command[]) {
     }
 }
 
-void parse_stage(char *command, struct stage *stage, int current_stage, int total_stages) {
+void parse_stage(char *command, struct stage *stage,
+                 int current_stage, int total_stages) {
     char input[INPUT_MAX];
     char output[OUTPUT_MAX];
     int argc = 0;
@@ -81,7 +83,9 @@ void parse_stage(char *command, struct stage *stage, int current_stage, int tota
     input[0] = '\0';
     output[0] = '\0';
 
-    for (token = strtok(command, delim); token != NULL; token = strtok(NULL, delim)) {
+    for (token = strtok(command, delim);
+         token != NULL;
+         token = strtok(NULL, delim)) {
         if (strcmp(token, "<") == 0) {
             /* input redirection */
             if (input_status || output_status)
