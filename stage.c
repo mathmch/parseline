@@ -2,12 +2,12 @@
 #include <string.h>
 #include "stage.h"
 
-void setup_stage(struct stage *stage, char *command, int number, char *input,
+void setup_stage(struct stage *stage, int number, char *command, char *input,
                  char *output, int argc, char *argv[], int total_stages) {
     int i;
 
-    strcpy(stage->command, command);
     stage->number = number;
+    strcpy(stage->command, command);
 
     if (*input != '\0') {
         strcpy(stage->input, input);
@@ -35,18 +35,18 @@ void setup_stage(struct stage *stage, char *command, int number, char *input,
     }
 }
 
-void print_stage(struct stage *st) {
+void print_stage(struct stage *stage) {
     int i;
     printf("--------\n");
-    printf("Stage %d: \"%s\"\n", st->number, st->command);
+    printf("Stage %d: \"%s\"\n", stage->number, stage->command);
     printf("--------\n");
-    printf("     input: %s\n", st->input);
-    printf("    output: %s\n", st->output);
-    printf("      argc: %d\n", st->argc);
+    printf("     input: %s\n", stage->input);
+    printf("    output: %s\n", stage->output);
+    printf("      argc: %d\n", stage->argc);
     printf("      argv: ");
-    for (i = 0; i < st->argc; i++) {
-        printf("\"%s\"", st->argv[i]);
-        if (st->argc != 1 && i < st->argc - 1)
+    for (i = 0; i < stage->argc; i++) {
+        printf("\"%s\"", stage->argv[i]);
+        if (stage->argc != 1 && i < stage->argc - 1)
             printf(",");
     }
 

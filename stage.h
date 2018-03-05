@@ -16,7 +16,7 @@ struct stage {
     char *argv[MAX_ARGUMENTS];
 };
 
-void setup_stage(struct stage *stage, char *command, int number, char *input,
+void setup_stage(struct stage *stage, int number, char *command, char *input,
                  char *output, int argc, char *argv[], int total_stages);
 
 void print_stage(struct stage *st);
