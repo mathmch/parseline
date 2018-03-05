@@ -6,6 +6,7 @@ void setup_stage(struct stage *stage, char *command, int number, char *input,
                  char *output, int argc, char *argv[], int total_stages) {
     int i;
 
+    strcpy(stage->command, command);
     stage->number = number;
 
     if (*input != '\0') {
@@ -37,7 +38,7 @@ void setup_stage(struct stage *stage, char *command, int number, char *input,
 void print_stage(struct stage *st) {
     int i;
     printf("--------\n");
-    printf("Stage %d: %s\n", st->number, st->command);
+    printf("Stage %d: \"%s\"\n", st->number, st->command);
     printf("--------\n");
     printf("     input: %s\n", st->input);
     printf("    output: %s\n", st->output);
